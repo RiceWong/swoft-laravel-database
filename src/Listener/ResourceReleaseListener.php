@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Orm\Listener;
+namespace  SwoftLaravel\Database\Listener;
 
 use Swoft\App;
 use Swoft\Core\RequestContext;
