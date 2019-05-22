@@ -1,0 +1,24 @@
+{
+    "name": "swoft-laravel/database",
+    "description": "laravel database in swoft",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "huangweiqiang",
+            "email": "ricky.huang@wetax.com.cn"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "SwoftLaravel\\Database\\": "src/"
+        },
+        "files": []
+    },
+    "require": {
+        "swoft/framework": "^1.0",
+        "illuminate/database": "^5.7",
+        "illuminate/config": "^5.7"
+    }
+}
