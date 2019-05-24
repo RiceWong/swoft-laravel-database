@@ -81,7 +81,7 @@ return [
 ];
 ```
 或者手工管理
-// 初始化连接
+初始化连接
 ```php
 use SwoftLaravel\Database\Capsule;
 
@@ -92,7 +92,7 @@ class BeforeRequestListener implements EventHandlerInterface {
     }
 }
 ```
-// 主动释放连接，使用comysql不主动释放会导致连接数暴涨
+主动释放连接，使用comysql不主动释放会导致连接数暴涨
 ```php
 use SwoftLaravel\Database\Capsule;
 class ResourceReleaseListener implements EventHandlerInterface {
