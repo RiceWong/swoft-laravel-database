@@ -21,6 +21,6 @@ use Swoft\Event\EventInterface;
  */
 class ResourceReleaseListener implements EventHandlerInterface {
     public function handle(EventInterface $event){
-        Capsule::getDatabaseManager()->clearContextConnection();
+        Capsule::collectResource();
     }
 }

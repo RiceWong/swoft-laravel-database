@@ -18,9 +18,8 @@ use PDO;
 use Swoole\Coroutine;
 
 class Capsule  {
-    public static $instance;
+    protected static $instance;
     protected $manager;
-    public static $a;
     public function __construct(Container $container = null) {
         $this->manager = new CoDatabaseManager($container);
     }
@@ -32,5 +31,11 @@ class Capsule  {
     }
     public static function getDatabaseManager() {
         return self::$instance->manager;
+    }
+
+    public static function collectResource(){
+        if (self::$instance !== null){
+            self::$instance->clearContextConnection();
+        }
     }
 }
