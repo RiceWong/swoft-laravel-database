@@ -35,7 +35,7 @@ class Capsule  {
 
     public static function collectResource(){
         if (self::$instance !== null){
-            self::$instance->clearContextConnection();
+            self::$instance->getDatabaseManager()->clearContextConnection();
         }
     }
 }
