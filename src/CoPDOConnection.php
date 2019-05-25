@@ -53,7 +53,7 @@ class CoPDOConnection implements PDOConnectionInterface {
         if (array_key_exists('timeout', $driverOptions)){
             $timeout = $driverOptions['timeout'];
         }
-        $stmt =  $this->comysql->prepare($prepareString, $timeout);
+        $stmt =  $this->comysql->prepare($prepareString);
         $stmt === false && $this->throwException();
         return new CoPDOStatement($stmt);
     }
