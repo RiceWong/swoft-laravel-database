@@ -8,6 +8,8 @@ use Swoft\Event\EventHandlerInterface;
 use Swoft\Event\EventInterface;
 use Swoft\Http\Server\Event\HttpServerEvent;
 use SwoftLaravel\Database\Capsule;
+use SwoftLaravel\Database\DatabaseServiceProvider;
+
 /**
  * Class TestStartListener
  * @package App\Boot\Listener
@@ -16,6 +18,7 @@ use SwoftLaravel\Database\Capsule;
  */
 class BeforeRequestListener implements EventHandlerInterface {
     public function handle(EventInterface $event){
-        Capsule::init();
+        $confPath = BASE_PATH.'/config/database.php';
+        DatabaseServiceProvider::init($confPath);
     }
 }

@@ -5,6 +5,7 @@ namespace SwoftLaravel\Database;
 use PDO;
 use Illuminate\Database\Connectors\Connector;
 use Illuminate\Database\Connectors\ConnectorInterface;
+use SwoftLaravel\Database\Interfaces\PDOConnectionInterface;
 class CoMysqlConnector extends Connector implements ConnectorInterface {
     /**
      * Establish a database connection.
@@ -17,7 +18,6 @@ class CoMysqlConnector extends Connector implements ConnectorInterface {
         $config = $this->getCoMysqlConfig($config);
         $connection = new CoPDOConnection($config);
         $this->configureEncoding($connection, $config);
-
         // Next, we will check to see if a timezone has been specified in this config
         // and if it has we will issue a statement to modify the timezone with the
         // database. Setting this DB timezone is an optional configuration item.
