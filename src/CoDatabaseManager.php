@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\MySqlConnection;
 use PDO;
 use Swoole\Coroutine;
-
 class CoDatabaseManager extends DatabaseManager {
     protected static $contextConnections = [];
     public function __construct(Container $container = null) {
@@ -27,8 +26,11 @@ class CoDatabaseManager extends DatabaseManager {
             $container['config']['database.default'] = 'default';
         }
     }
+    protected function getCoId(){
+        return Coroutine::getuid();
+    }
     public function getConnection($name) {
-        $cid = Coroutine::getCid();
+        $cid = $this->getCoId();
         if (!array_key_exists($cid, self::$contextConnections)){
             self::$contextConnections[$cid] = [];
         }
@@ -38,7 +40,7 @@ class CoDatabaseManager extends DatabaseManager {
         return null;
     }
     public function setConnection($connection, $name){
-        $cid = Coroutine::getCid();
+        $cid = $this->getCoId();
         self::$contextConnections[$cid][$name] = $connection;
         return $connection;
     }
@@ -54,12 +56,12 @@ class CoDatabaseManager extends DatabaseManager {
                 $this->makeConnection($database), $type
             ), $name);
         }
-        $cid = Coroutine::getCid();
+        $cid = $this->getCoId();
         $count = count(self::$contextConnections[$cid]);
         return $connection;
     }
     public function clearContextConnection(){
-        $cid = Coroutine::getCid();
+        $cid = $this->getCoId();
         if (!self::$contextConnections[$cid]){
             return;
         }
