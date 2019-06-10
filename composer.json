@@ -18,7 +18,7 @@
     },
     "require": {
         "swoft/framework": "~1.0",
-        "illuminate/database": "~5.7.x",
-        "illuminate/config": "~5.7.x"
+        "illuminate/database": "~5.7.2",
+        "illuminate/config": "~5.7.2"
     }
 }
