@@ -16,11 +16,11 @@ use Swoft\Event\EventInterface;
 /**
  * Class TestStartListener
  * @package App\Boot\Listener
- * @Listener(AppEvent::RESOURCE_RELEASE)
+// * @Listener(AppEvent::RESOURCE_RELEASE)
  *
  */
 class ResourceReleaseListener implements EventHandlerInterface {
     public function handle(EventInterface $event){
-        Capsule::connection()->close();
+        Capsule::collectResource();
     }
 }

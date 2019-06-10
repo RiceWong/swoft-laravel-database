@@ -15,7 +15,7 @@ class CoPDOStatement extends \PDOStatement {
         }
         return $this->stmt->execute($params);
     }
-//
+
     public function fetch ($fetch_style = null, $cursor_orientation = PDO::FETCH_ORI_NEXT, $cursor_offset = 0) {
         return $this->stmt->fetch();
     }
@@ -25,6 +25,7 @@ class CoPDOStatement extends \PDOStatement {
 //    public function bindColumn ($column, &$param, $type = null, $maxlen = null, $driverdata = null) {}
 //
     public function bindValue ($parameter, $value, $data_type = PDO::PARAM_STR) {
+
         $this->values[] = $value;
     }
 //

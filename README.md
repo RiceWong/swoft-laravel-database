@@ -85,19 +85,22 @@ return [
 ```php
 use SwoftLaravel\Database\Capsule;
 
-class BeforeRequestListener implements EventHandlerInterface {
-    public function handle(EventInterface $event){
-        // 类初始化
-        Capsule::init();
+class OnWorkerStartListener implements WorkerStartInterface {
+    public function onWorkerStart(Server $server, int $workerId, bool $isWorker) {
+        if ($isWorker){
+            $confPath = BASE_PATH.'/config/database.php';
+            DatabaseServiceProvider::init($confPath);
+        }
     }
 }
+
 ```
 主动释放连接，使用comysql不主动释放会导致连接数暴涨
 ```php
 use SwoftLaravel\Database\Capsule;
 class ResourceReleaseListener implements EventHandlerInterface {
     public function handle(EventInterface $event){
-        Capsule::connection()->close();
+        Capsule::collectResource();
     }
 }
 ```

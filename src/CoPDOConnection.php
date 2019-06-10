@@ -5,6 +5,7 @@ namespace SwoftLaravel\Database;
 use PDO;
 use function func_get_args;
 use \Swoole\Coroutine\Mysql;
+use SwoftLaravel\Database\Interfaces\PDOConnectionInterface;
 use PDOException;
 /**
  * PDO implementation of the Connection interface.
@@ -12,9 +13,11 @@ use PDOException;
  */
 class CoPDOConnection implements PDOConnectionInterface {
     protected $comysql;
+    protected $id;
     public function __construct($config) {
         $this->comysql = new Mysql();
         $result = $this->comysql->connect($config);
+        $this->id = time();
         if ($result === false){
             $errno = $this->comysql->connect_errno;
             $error = $this->comysql->connect_error;
@@ -50,7 +53,7 @@ class CoPDOConnection implements PDOConnectionInterface {
         if (array_key_exists('timeout', $driverOptions)){
             $timeout = $driverOptions['timeout'];
         }
-        $stmt =  $this->comysql->prepare($prepareString, $timeout);
+        $stmt =  $this->comysql->prepare($prepareString);
         $stmt === false && $this->throwException();
         return new CoPDOStatement($stmt);
     }
@@ -58,7 +61,6 @@ class CoPDOConnection implements PDOConnectionInterface {
     /**
      * {@inheritdoc}
      */
-    //    public function query();
     public function query($sql, $timeout=null) {
         $stmt = $this->comysql->query($sql, $timeout);
         $stmt === false && $this->throwException();
@@ -100,6 +102,7 @@ class CoPDOConnection implements PDOConnectionInterface {
     }
 
     public function close(){
+        var_export('close: '.$this->id);
         return $this->comysql->close();
     }
 }
