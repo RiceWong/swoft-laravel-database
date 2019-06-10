@@ -62,7 +62,7 @@ class CoDatabaseManager extends DatabaseManager {
     }
     public function clearContextConnection(){
         $cid = $this->getCoId();
-        if (!self::$contextConnections[$cid]){
+        if ( !array_key_exists($cid, self::$contextConnections) ){
             return;
         }
         if (count(self::$contextConnections[$cid]) > 0){

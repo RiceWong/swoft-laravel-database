@@ -18,7 +18,6 @@ use Swoole\Coroutine;
 class DatabaseServiceProvider {
     protected static $registered = false;
     public static function init($confPath, $app=null){
-
         if (self::$registered){
             return;
         }
@@ -31,6 +30,7 @@ class DatabaseServiceProvider {
                 $config->set('database', require $confPath);
                 return $config;
             });
+
             // bind connection factory
             $app->singleton('db.factory', function ($app) {
                 return new ConnectionFactory($app);

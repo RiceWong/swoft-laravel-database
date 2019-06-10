@@ -17,8 +17,8 @@
         "files": []
     },
     "require": {
-        "swoft/framework": "^1.0",
-        "illuminate/database": "^5.7",
-        "illuminate/config": "^5.7"
+        "swoft/framework": "~1.9",
+        "illuminate/database": "~5.7.28",
+        "illuminate/config": "~5.7.28"
     }
 }
