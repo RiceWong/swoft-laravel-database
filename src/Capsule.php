@@ -32,10 +32,4 @@ class Capsule  {
     public static function getDatabaseManager() {
         return self::$instance->manager;
     }
-
-    public static function collectResource(){
-        if (self::$instance !== null){
-            self::$instance->getDatabaseManager()->clearContextConnection();
-        }
-    }
 }

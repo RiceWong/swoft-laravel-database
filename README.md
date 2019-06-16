@@ -37,34 +37,55 @@ return [
     'default' => env('DB_CONNECTION', 'mysql'),
     'connections' => [
         'default' => [
-            // 数据库驱动, mysql 为同步版, comysql 为异步客户端
-            'driver' => 'comysql',
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'your database'),
-            'username' => env('DB_USERNAME', 'you user'),
-            'password' => env('DB_PASSWORD', 'your password'),
-            'charset' => 'utf8mb4',
+            // 数据库驱动, comysql 为异步客户端
+            'driver'    => 'comysql',
+            'host'      => env('DB_HOST', '127.0.0.1'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_DATABASE', 'your database'),
+            'username'  => env('DB_USERNAME', 'you user'),
+            'password'  => env('DB_PASSWORD', 'your password'),
+            'charset'   => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => 'your table prefix',
-            'strict' => true,
-            'engine' => null,
+            'prefix'    => 'your table prefix',
+            'strict'    => true,
+            'engine'    => null,
         ],
         'other' => [
-            // 数据库驱动, mysql 为同步版, comysql 为异步客户端
-            'driver' => 'comysql',
-            'host' => env('DB_HOST', '127.0.0.1'),
-            'port' => env('DB_PORT', '3306'),
-            'database' => env('DB_DATABASE', 'your database'),
-            'username' => env('DB_USERNAME', 'you user'),
-            'password' => env('DB_PASSWORD', 'your password'),
-            'charset' => 'utf8mb4',
+            // 数据库驱动, comysql 为异步客户端
+            'driver'    => 'comysql',
+            'host'      => env('DB_HOST', '127.0.0.1'),
+            'port'      => env('DB_PORT', '3306'),
+            'database'  => env('DB_DATABASE', 'your database'),
+            'username'  => env('DB_USERNAME', 'you user'),
+            'password'  => env('DB_PASSWORD', 'your password'),
+            'charset'   => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => 'your table prefix',
-            'strict' => true,
-            'engine' => null,
+            'prefix'    => 'your table prefix',
+            'strict'    => true,
+            'engine'    => null,
         ],
     ],
+    // 连接池
+    'pools' => [
+        // 别名配置，不可以和 connections中的database重名，否则会被识别为连接池配置
+        'default_config'  => [
+            // 最大连接数 
+            'max_connection' => 100,
+            // 启动时创建连接数
+            'min_connection' => 20,
+            // 查询超时时间
+            'max_wait_time'  => 2000
+        ],
+        // 使用别名方式引用配置
+        'default' => 'default_config',
+        // 直接使用数组进行连接池配置
+        'other'       => [
+            'max_connection' => 200,
+            'min_connection' => 20,
+            'max_wait_time'  => 2000
+        ],
+        'other2'      => 'default_config',
+    ]
 ];
 ```
 如果需要使用 swoole 异步客户端，需要绑定命名空间下的事件监听器
@@ -95,24 +116,48 @@ class OnWorkerStartListener implements WorkerStartInterface {
 }
 
 ```
-// 主动释放连接，使用comysql不主动释放会导致连接数暴涨
-```php
-use SwoftLaravel\Database\Capsule;
-class ResourceReleaseListener implements EventHandlerInterface {
-    public function handle(EventInterface $event){
-        Capsule::collectResource();
-    }
-}
-```
+ 连接生命周期结束则自动回收
+
 ## 使用
 ```php 
 use SwoftLaravel\Database\Capsule as DB;
+use Swoole\Coroutine\Channel;
 class Controller {
     public function demo(){
-        $user = Capsule::table('user')
+        $user = DB::table('user')
             ->where('name', 'ricky')
             >where('mobile', 13800138000)
             ->get();
+    }
+    // 需要swoole 4.0.3 以上版本
+    // 使用协程并发读数据库
+    public function go(){
+        $chan =  new Channel(2);
+        go(function () use($chan) {
+            $code = true;
+            $user = DB::connection('ucenter')->table('user')->where('id', 1)->get();
+            if ($user == null){
+                $code = false;
+            }
+            $chan->push([$code, 'user', $user]);
+        });
+        go(function () use($chan){
+            $code = true;
+            $profile =  DB::connection('ucenter')->table('profile')->where('uid', 1)->get();
+            if ($profile == null){
+                $code = false;
+            }
+            $chan->push([$code, 'profile', $profile]);
+        });
+        $count = 2;
+        $success = true;
+        $result = [];
+        while ($count-- > 0){
+            [$code, $field, $result] = $chan->pop();
+            $success &= $code;
+            $result[$field] = $result;
+        }
+        
     }
 }
 

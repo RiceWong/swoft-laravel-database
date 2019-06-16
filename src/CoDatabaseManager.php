@@ -16,8 +16,9 @@ use Illuminate\Database\Eloquent\Model as Eloquent;
 use Illuminate\Database\MySqlConnection;
 use PDO;
 use Swoole\Coroutine;
+use Swoole\Coroutine\Channel as chan;
 class CoDatabaseManager extends DatabaseManager {
-    protected static $contextConnections = [];
+    protected static $connPool = [];
     public function __construct(Container $container = null) {
         parent::__construct($container, $container['db.factory']);
         $container['config']['database.fetch'] = PDO::FETCH_OBJ;
@@ -25,24 +26,61 @@ class CoDatabaseManager extends DatabaseManager {
         if ($container['config']['database.default'] == null){
             $container['config']['database.default'] = 'default';
         }
+        // 初始化连接池配置
+        $config      = $container['config'];
+        $connections = $config['database.connections'];
+        $pools       = $config['database.pools'];
+        // 如果配置了连接池
+        if ( $pools !== null ){
+            foreach ($pools as $database=>$poolConfig) {
+                if ( !array_key_exists($database, $connections) ){
+                    continue;
+                }
+                // 配置别名
+                if (is_string($poolConfig) ){
+                    $poolConfig = $pools[$poolConfig];
+                }
+                $poolConfig['database'] = $database;
+                $config["database.connections.$database.query_timeout"] = $poolConfig['max_wait_time'];
+                $poolConfig['db_manager'] = $this;
+                self::$connPool[$database] = $container->make('db.connector.comysql.pool', $poolConfig);
+            }
+        }
     }
+    public function getPool($name){
+        if ( array_key_exists($name, self::$connPool)){
+            return self::$connPool[$name];
+        }
+        return false;
+    }
+
     protected function getCoId(){
         return Coroutine::getuid();
     }
-    public function getConnection($name) {
-        $cid = $this->getCoId();
-        if (!array_key_exists($cid, self::$contextConnections)){
-            self::$contextConnections[$cid] = [];
-        }
-        if ( array_key_exists($name, self::$contextConnections[$cid])){
-            return self::$contextConnections[$cid][$name];
-        }
-        return null;
+
+    public function makeConnection($name) {
+        return parent::makeConnection($name);
     }
-    public function setConnection($connection, $name){
-        $cid = $this->getCoId();
-        self::$contextConnections[$cid][$name] = $connection;
+
+    public function getConnection($name) {
+        $pool = $this->getPool($name);
+        if ($pool !== false){
+            $connection = $pool->acquireConnection();
+        }
+        else{
+            $connection = $this->makeConnection($name);
+        }
         return $connection;
+    }
+    public function releaseConnection($name, $connection){
+        $pool = $this->getPool($name);
+        if ($pool !== false){
+            $pool->releaseConnection($connection);
+            $pool->dump();
+        }
+        else{
+            $connection->close();
+        }
     }
 
     // 每个coroutine一个连接
@@ -51,27 +89,9 @@ class CoDatabaseManager extends DatabaseManager {
         $name = $name ?: $database;
         // 从上下文连接池中获取
         $connection = $this->getConnection($name);
-        if ( $connection === null) {
-            $connection = $this->setConnection($this->configure(
-                $this->makeConnection($database), $type
-            ), $name);
-        }
-        $cid = $this->getCoId();
-        $count = count(self::$contextConnections[$cid]);
-        return $connection;
+        return new CoMySqlConnectionProxy($connection, $name, $this);
     }
-    public function clearContextConnection(){
-        $cid = $this->getCoId();
-        if ( !array_key_exists($cid, self::$contextConnections) ){
-            return;
-        }
-        if (count(self::$contextConnections[$cid]) > 0){
-            foreach (self::$contextConnections[$cid] as $connection){
-                $connection->disconnect();
-            }
-            unset(self::$contextConnections[$cid]);
-        }
-    }
+
     public function disconnect($name = null) {
         $name = $name ?: $this->getDefaultConnection();
         $this->getConnection($name)->disconnect();

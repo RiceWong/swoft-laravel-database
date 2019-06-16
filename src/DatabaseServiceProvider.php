@@ -37,7 +37,7 @@ class DatabaseServiceProvider {
             });
             // bind database manager
             $app->singleton('db', function ($app) {
-                return new CoDatabaseManager($app, $app['db.factory']);
+                return new CoDatabaseManager($app);
             });
             // bind connection
             $app->bind('db.connection', function ($app) {
@@ -45,7 +45,10 @@ class DatabaseServiceProvider {
             });
             // register comysql connector
             $app->bind('db.connector.comysql', function ($app, $params){
-                return new CoMysqlConnector;
+                return new CoMysqlConnector($params);
+            });
+            $app->bind('db.connector.comysql.pool', function ($app, $params){
+                return new CoConnectionPool($app, $params);
             });
             // register comysql driver
             Connection::resolverFor('comysql', function ($connection, $database, $prefix, $config){
