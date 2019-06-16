@@ -8,7 +8,7 @@ php >7.2, swoole > 4.0.3, swoft > v1.9 (暂不支持v2.x)
     * 独立使用 laravel database, 文档和使用方式参考lavarl 社区文档
     * 在不扩大代码量的情况下，尽可能地迁移 laravel database 的功能: QueryBuilder, Model, ORM, 配置项
     * 支持swoole Coroutine\MySQL 异步客户端
-    * ~~mysql 连接池~~
+    * coroutine mysql连接池
 2. 实现
     * 代码部分主要参照 [官方文档](https://github.com/illuminate/database) ，在它的基础之上，整合laravel database数据库配置加载方式
     * 参考 database 本身的mysql driver实现，对Coroutine\MySQL的相关调用做了一层代理封装, 使其可以与复用mysql driver部分的代码
