@@ -102,7 +102,7 @@ return [
 ];
 ```
 或者手工管理
-// 初始化连接
+初始化连接
 ```php
 use SwoftLaravel\Database\Capsule;
 
@@ -117,7 +117,7 @@ class OnWorkerStartListener implements WorkerStartInterface {
 
 ```
  连接生命周期结束则自动回收
-
+ 
 ## 使用
 ```php 
 use SwoftLaravel\Database\Capsule as DB;
