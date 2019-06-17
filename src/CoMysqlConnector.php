@@ -30,15 +30,16 @@ class CoMysqlConnector extends Connector implements ConnectorInterface {
 
     protected function getCoMysqlConfig($config) {
         $coMysqlConfig = [
-            'host'        => $config['host'],
-            'port'        => $config['port'],
-            'user'        => $config['username'],
-            'password'    => $config['password'],
-            'database'    => $config['database'],
-            'timeout'     => isset($config['timeout']) ?: 30,
-            'charset'     => $config['charset'],
-            'strict_type' => false, // //开启严格模式，query方法返回的数据也将转为强类型
-            'fetch_mode'  => true, //开启fetch模式, 可与pdo一样使用fetch/fetchAll逐行或获取全部结果集(4.0版本以上)
+            'host'          => $config['host'],
+            'port'          => $config['port'],
+            'user'          => $config['username'],
+            'password'      => $config['password'],
+            'database'      => $config['database'],
+            'timeout'       => isset($config['timeout']) ?: 5,
+            'charset'       => $config['charset'],
+            'strict_type'   => false, // //开启严格模式，query方法返回的数据也将转为强类型
+            'fetch_mode'    => true, //开启fetch模式, 可与pdo一样使用fetch/fetchAll逐行或获取全部结果集(4.0版本以上)
+            'query_timeout' => data_get($config, 'query_timeout', null),
         ];
         return $coMysqlConfig;
     }
@@ -54,8 +55,7 @@ class CoMysqlConnector extends Connector implements ConnectorInterface {
         if (!isset($config['charset'])) {
             return $connection;
         }
-
-        $connection->prepare("set names '{$config['charset']}'" . $this->getCollation($config))->execute();
+        $connection->query("set names '{$config['charset']}'" . $this->getCollation($config), -1);
     }
 
     /**

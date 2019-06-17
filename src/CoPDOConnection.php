@@ -13,16 +13,40 @@ use PDOException;
  */
 class CoPDOConnection implements PDOConnectionInterface {
     protected $comysql;
-    protected $id;
+    public $id;
+    protected $queryTimeout = -1;
+    protected $config;
     public function __construct($config) {
         $this->comysql = new Mysql();
+        if ( array_search('query_timeout', $config)!== false ){
+            $timeout = intval($config['query_timeout']);
+            if ($timeout > 0){
+                $timeout = $timeout / 1000;
+            }
+            $this->queryTimeout = $timeout;
+            unset($config['query_timeout']);
+        }
+        $this->config = $config;
         $result = $this->comysql->connect($config);
-        $this->id = time();
         if ($result === false){
             $errno = $this->comysql->connect_errno;
             $error = $this->comysql->connect_error;
             throw new PDOException($error, $errno);
         }
+    }
+
+    protected function getComysql(){
+        if ( !$this->comysql->connected ){
+            $this->comysql->connect($this->config);
+        }
+        return $this->comysql;
+    }
+    protected function getTimeout($timeout=null){
+        return $timeout === null ? $this->queryTimeout : $timeout;
+    }
+
+    public function setTimeout($timeout=null){
+        $this->queryTimeout = $timeout/1000;
     }
 
     protected function throwException(){
@@ -32,8 +56,8 @@ class CoPDOConnection implements PDOConnectionInterface {
      * {@inheritdoc}
      * @param string $statement
      */
-    public function exec($statement) {
-        $result = $this->comysql->query($statement);
+    public function exec($statement, $timeout=null) {
+        $result = $this->getComysql()->query($statement, $this->getTimeout($timeout) );
         $result === false && $this->throwException();
         return $result;
     }
@@ -49,29 +73,29 @@ class CoPDOConnection implements PDOConnectionInterface {
      * {@inheritdoc}
      */
     public function prepare($prepareString, $driverOptions = []) {
-        $timeout = null;
-        if (array_key_exists('timeout', $driverOptions)){
-            $timeout = $driverOptions['timeout'];
-        }
-        $stmt =  $this->comysql->prepare($prepareString);
+        $stmt =  $this->getComysql()->prepare($prepareString);
         $stmt === false && $this->throwException();
-        return new CoPDOStatement($stmt);
+        $stmt = new CoPDOStatement($stmt, $this->getTimeout());
+        $stmt->sql = $prepareString;
+        return $stmt;
     }
 
     /**
      * {@inheritdoc}
      */
     public function query($sql, $timeout=null) {
-        $stmt = $this->comysql->query($sql, $timeout);
-        $stmt === false && $this->throwException();
-        return new CoPDOStatement($stmt);
+        $result = $this->getComysql()->query($sql, $this->getTimeout($timeout) );
+        $result === false && $this->throwException();
+        $stmt = new CoPDOStatement(null);
+        $stmt->setRows($result);
+        return $stmt;
     }
 
     /**
      * {@inheritdoc}
      */
     public function quote($input, $type = PDO::PARAM_STR) {
-        return $this->comysql->escape($input);
+        return $this->getComysql()->escape($input);
     }
 
     /**
@@ -82,15 +106,15 @@ class CoPDOConnection implements PDOConnectionInterface {
     }
 
     public function beginTransaction() {
-        return $this->comysql->begin();
+        return $this->getComysql()->begin();
     }
 
     public function commit() {
-        return $this->comysql->commit();
+        return $this->getComysql()->commit();
     }
 
     public function rollBack() {
-        return $this->comysql->rollback();
+        return $this->getComysql()->rollback();
     }
 
     public function errorCode() {
@@ -102,7 +126,6 @@ class CoPDOConnection implements PDOConnectionInterface {
     }
 
     public function close(){
-        var_export('close: '.$this->id);
         return $this->comysql->close();
     }
 }
