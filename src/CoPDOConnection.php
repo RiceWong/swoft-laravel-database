@@ -37,7 +37,7 @@ class CoPDOConnection implements PDOConnectionInterface {
 
     protected function getComysql(){
         if ( !$this->comysql->connected ){
-            $this->comysql->connect($this->config);
+            $this->reconnect();
         }
         return $this->comysql;
     }
@@ -125,6 +125,11 @@ class CoPDOConnection implements PDOConnectionInterface {
         return $this->comysql->error;
     }
 
+    public function reconnect(){
+        $this->comysql->close();
+        $this->comysql = new Mysql();
+        $this->comysql->connect($this->config);
+    }
     public function close(){
         return $this->comysql->close();
     }

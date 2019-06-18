@@ -8,11 +8,6 @@ use Illuminate\Database\MySqlConnection;
 use Illuminate\Database\QueryException;
 use PDO;
 use Illuminate\Database\Connection;
-use Illuminate\Database\Schema\MySqlBuilder;
-use Illuminate\Database\Query\Processors\MySqlProcessor;
-use Doctrine\DBAL\Driver\PDOMySql\Driver as DoctrineDriver;
-use Illuminate\Database\Query\Grammars\MySqlGrammar as QueryGrammar;
-use Illuminate\Database\Schema\Grammars\MySqlGrammar as SchemaGrammar;
 
 class CoMySqlConnection extends MySqlConnection
 {
@@ -21,7 +16,7 @@ class CoMySqlConnection extends MySqlConnection
         try {
             $result = $callback($query, $bindings);
         }
-        // 补货 异步客户端连接异常
+        // 捕获异步客户端连接异常
         catch (CoPDOException $e){
             $e->setMysqlError($this);
             throw $e;
@@ -34,6 +29,9 @@ class CoMySqlConnection extends MySqlConnection
         return $result;
     }
 
+    public function reconnect() {
+        $this->getPdo()->reconnect();
+    }
     public function close(){
         return $this->getPdo()->close();
     }

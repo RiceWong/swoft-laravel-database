@@ -14,18 +14,19 @@ use Illuminate\Database\Schema\Grammars\MySqlGrammar as SchemaGrammar;
 use Illuminate\Database\ConnectionInterface;
 class CoMySqlConnectionProxy implements ConnectionInterface{
     protected $_proxy;
-    public function __construct($connection, $name, $manager) {
+    public function __construct($connection, $name, $manager, $attrs=[]) {
         $this->_proxy = [
             'connection' => $connection,
             'name'       => $name,
-            'manager'    => $manager
+            'manager'    => $manager,
+            'attrs'      => $attrs
         ];
     }
 
     public function __destruct() {
-        list($connection, $name, $manager) = array_values($this->_proxy);
+        list($connection, $name, $manager, $attrs) = array_values($this->_proxy);
         $this->_proxy = null;
-        $manager->releaseConnection($name, $connection);
+        $manager->releaseConnection($name, $connection, $attrs);
     }
     /**
      * Begin a fluent query against a database table.
