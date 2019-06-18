@@ -79,7 +79,7 @@ class CoConnectionPool {
     }
     public function closeConnection($connection){
         $connection->close();
-        $thios->cur_connections--;
+        $this->cur_connections--;
     }
     public function stat($fields=['cid', 'timestamp', 'database', 'current', 'capacity', 'waiting', 'used']){
         $database  = $this->database;
