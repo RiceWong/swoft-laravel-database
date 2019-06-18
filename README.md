@@ -30,7 +30,7 @@ composer update
 # 或者只更新生产环境依赖
 composer update --no-dev
 ```
-在swoole目录下新建文件  config\database.php
+在根目录下新建文件  config\database.php
 ```php
 return [
     // 默认连接
@@ -84,7 +84,22 @@ return [
             'min_connection' => 20,
             'max_wait_time'  => 2000
         ],
-        'other2'      => 'default_config',
+        // 开启连接池调试
+        'debug_sample'      => [
+            'max_connection' => 200,
+            'min_connection' => 20,
+            'max_wait_time'  => 2000,
+            // 需要指定连接池调试信息输出格式
+            'debug' => [
+               'enable'   => true,
+               'tpl'      => "%.4f|co[%3d]|pool[%s]:%8s, stats: [%3d/%3d], usage: [%3d/%3d], waiting: %3d",
+               // timestamp |  cid   |  database  |  action  |    current    |    capacity    |     used    |   current      |   waiting
+               // 时间戳     | 协程id |  连接池名    |  动作   |  当前活跃连接数 |  连接池最大容量 | 已使用连接数 |  当前可用连接数  |  等待连接数
+               'tpl_fields' => ['timestamp', 'cid',  'database',  'action', 'current', 'capacity', 'used',  'current', 'waiting'],
+           ],
+           // 或者 直接开启或关闭调试, 调试信息采用默认格式
+           'debug' => true
+        ],
     ]
 ];
 ```
@@ -104,8 +119,7 @@ return [
 或者手工管理
 初始化连接
 ```php
-use SwoftLaravel\Database\Capsule;
-
+use SwoftLaravel\Database\DatabaseServiceProvider;
 class OnWorkerStartListener implements WorkerStartInterface {
     public function onWorkerStart(Server $server, int $workerId, bool $isWorker) {
         if ($isWorker){
